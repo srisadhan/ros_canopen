@@ -279,13 +279,15 @@ void PDOMapper::RPDO::sync(LayerStatus &status){
 }
 
 void PDOMapper::RPDO::handleFrame(const can::Frame & msg){
+    time_point now = get_abs_time();
+
     size_t offset = 0;
     const uint8_t * src = msg.data.data();
     for(std::vector<boost::shared_ptr<Buffer> >::iterator it = buffers.begin(); it != buffers.end(); ++it){
         Buffer &b = **it;
         
         if( offset + b.size <= msg.dlc ){
-            b.write(src+offset, b.size);
+            b.write(src+offset, b.size, now);
             offset += b.size;
         }else{
             // ERROR
@@ -332,7 +334,7 @@ bool PDOMapper::Buffer::read(uint8_t* b, const size_t len){
     dirty = false;
     return was_dirty;
 }
-void PDOMapper::Buffer::write(const uint8_t* b, const size_t len){
+void PDOMapper::Buffer::write(const uint8_t* b, const size_t len, const time_point &tp){
     boost::mutex::scoped_lock lock(mutex);
     if(size > len){
         BOOST_THROW_EXCEPTION( std::bad_cast() );
@@ -340,13 +342,14 @@ void PDOMapper::Buffer::write(const uint8_t* b, const size_t len){
     empty = false;
     dirty = true;
     memcpy(&buffer[0], b, size);
+    stamp = tp;
     lock.unlock();
     cond.notify_all();
 }
-void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, String &data){
+void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, Stamped<String> &data){
     boost::mutex::scoped_lock lock(mutex);
     time_point abs_time = get_abs_time(boost::chrono::seconds(1));
-    if(size != data.size()){
+    if(size != data.data_.size()){
         BOOST_THROW_EXCEPTION( std::bad_cast() );
     }
     while(empty){
@@ -356,16 +359,18 @@ void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, String &da
         }
     }
     if(dirty){
-        data.assign(buffer.begin(), buffer.end());
+        data.data_.assign(buffer.begin(), buffer.end());
+        data.stamp_ = stamp;
         dirty = false;
     }
 }
-void PDOMapper::Buffer::write(const canopen::ObjectDict::Entry &, const String &data){
+void PDOMapper::Buffer::write(const canopen::ObjectDict::Entry &, const Stamped<String> &data){
     boost::mutex::scoped_lock lock(mutex);
-    if(size != data.size()){
+    if(size != data.data_.size()){
         BOOST_THROW_EXCEPTION( std::bad_cast() );
     }
     empty = false;
     dirty = true;
-    buffer.assign(data.begin(),data.end());
+    buffer.assign(data.data_.begin(), data.data_.end());
+    stamp = data.stamp_;
 }

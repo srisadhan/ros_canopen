@@ -16,6 +16,7 @@ namespace canopen{
 typedef boost::chrono::high_resolution_clock::time_point time_point;
 typedef boost::chrono::high_resolution_clock::duration time_duration;
 inline time_point get_abs_time(const time_duration& timeout) { return boost::chrono::high_resolution_clock::now() + timeout; }
+inline time_point get_abs_time() { return boost::chrono::high_resolution_clock::now(); }
 
 
     
@@ -39,7 +40,8 @@ class SDOClient{
     
     void handleFrame(const can::Frame & msg);
     
-    String buffer;
+    Stamped<String> read_buffer;
+    String write_buffer;
     size_t offset;
     size_t total;
     bool done;
@@ -51,8 +53,8 @@ class SDOClient{
 
     const boost::shared_ptr<can::CommInterface> interface_;
 protected:
-    void read(const canopen::ObjectDict::Entry &entry, String &data);
-    void write(const canopen::ObjectDict::Entry &entry, const String &data);
+    void read(const canopen::ObjectDict::Entry &entry, Stamped<String> &data);
+    void write(const canopen::ObjectDict::Entry &entry, const Stamped<String> &data);
 public:
     const boost::shared_ptr<ObjectStorage> storage_;
     
@@ -70,9 +72,9 @@ class PDOMapper{
     class Buffer{
     public:
         bool read(uint8_t* b, const size_t len);
-        void write(const uint8_t* b, const size_t len);
-        void read(const canopen::ObjectDict::Entry &entry, String &data);
-        void write(const canopen::ObjectDict::Entry &, const String &data);
+        void write(const uint8_t* b, const size_t len, const time_point &tp);
+        void read(const canopen::ObjectDict::Entry &entry, Stamped<String> &data);
+        void write(const canopen::ObjectDict::Entry &, const Stamped<String> &data);
         void clean() { dirty = false; }
         const size_t size;
         Buffer(const size_t sz) : size(sz), dirty(false), empty(true), buffer(sz) {}
@@ -83,6 +85,7 @@ class PDOMapper{
         bool dirty;
         bool empty;
         std::vector<char> buffer;
+        time_point stamp;
     };
     
     class PDO {

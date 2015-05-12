@@ -20,12 +20,12 @@ template<> String & ObjectStorage::Data::access(){
     if(!valid){
         throw std::length_error("buffer not valid");
     }
-    return buffer;
+    return buffer.data_;
 }
 template<> String & ObjectStorage::Data::allocate(){
-    buffer.resize(0);
+    buffer.data_.resize(0);
     valid = true;
-    return buffer;
+    return buffer.data_;
 }
 
 void ObjectStorage::Data::init(){
@@ -33,8 +33,9 @@ void ObjectStorage::Data::init(){
 
     if(entry->init_val.is_empty()) return;
 
-    if(!valid || (buffer != entry->init_val.data() && (entry->def_val.is_empty() || buffer == entry->def_val.data()))){
-        buffer = entry->init_val.data();
+    if(!valid || (buffer.data_ != entry->init_val.data() && (entry->def_val.is_empty() || buffer.data_ == entry->def_val.data()))){
+        buffer.data_ = entry->init_val.data();
+        buffer.stamp_ = boost::chrono::high_resolution_clock::time_point();
         valid = true;
         if(entry->writable)
             write_delegate(*entry, buffer);

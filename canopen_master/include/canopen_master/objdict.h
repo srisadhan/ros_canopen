@@ -9,6 +9,7 @@
 #include <typeinfo> 
 #include <vector>
 #include "exceptions.h"
+#include <boost/chrono/system_clocks.hpp>
 
 namespace canopen{
 
@@ -47,6 +48,16 @@ public:
     operator const std::string () const {
         return std::string(begin(), end());
     }
+};
+template<typename T> struct Stamped{
+    typedef T type;
+    T data_;
+    boost::chrono::high_resolution_clock::time_point stamp_;
+    Stamped() {}
+    Stamped(const T&d): data_(d) { }
+    Stamped(const T&d, boost::chrono::high_resolution_clock::time_point &s): data_(d), stamp_(s) { }
+    template<typename D> Stamped( const Stamped<D> &other) : data_(other.data_), stamp_(other.stamp_) { }
+    operator const type & () const { return data_; }
 };
 
 class HoldAny{
@@ -236,13 +247,13 @@ public:
  
 class ObjectStorage{
 public:
-    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, String &> ReadDelegate;
-    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, const String &> WriteDelegate;
+    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, Stamped<String> &> ReadDelegate;
+    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, const Stamped<String> &> WriteDelegate;
     
 protected:
     class Data: boost::noncopyable{
         boost::mutex mutex;
-        String buffer;
+        Stamped<String> buffer;
         bool valid;
 
         ReadDelegate read_delegate;
@@ -252,11 +263,15 @@ protected:
             if(!valid){
                 BOOST_THROW_EXCEPTION(std::length_error("buffer not valid"));
             }
-            return *(T*)&(buffer.front());
+            return *(T*)&(buffer.data_.front());
+        }
+        template <typename T> void update( const T& t){
+            allocate<T>() = t;
+            buffer.stamp_ = boost::chrono::high_resolution_clock::now();
         }
         template <typename T> T & allocate(){
             if(!valid){
-                buffer.resize(sizeof(T));
+                buffer.data_.resize(sizeof(T));
                 valid = true;
             }
             return access<T>();
@@ -265,14 +280,16 @@ protected:
         const TypeGuard type_guard;
         const boost::shared_ptr<const ObjectDict::Entry> entry;
         const ObjectDict::Key key;
-        size_t size() { boost::mutex::scoped_lock lock(mutex); return buffer.size(); }
+        size_t size() { boost::mutex::scoped_lock lock(mutex); return buffer.data_.size(); }
         
         template<typename T> Data(const ObjectDict::Key &k, const boost::shared_ptr<const ObjectDict::Entry> &e, const T &val, const ReadDelegate &r, const WriteDelegate &w)
         : valid(false), read_delegate(r), write_delegate(w), type_guard(TypeGuard::create<T>()), entry(e), key(k){
             assert(!r.empty());
             assert(!w.empty());
             assert(e);
-            allocate<T>() = val;
+
+            allocate<T>();
+            access<T>() = val;
         }
         Data(const ObjectDict::Key &k, const boost::shared_ptr<const ObjectDict::Entry> &e, const TypeGuard &t, const ReadDelegate &r, const WriteDelegate &w)
         : valid(false), read_delegate(r), write_delegate(w), type_guard(t), entry(e), key(k){
@@ -280,14 +297,14 @@ protected:
             assert(!w.empty());
             assert(e);
             assert(t.valid());
-            buffer.resize(t.get_size());
+            buffer.data_.resize(t.get_size());
         }
         void set_delegates(const ReadDelegate &r, const WriteDelegate &w){
             boost::mutex::scoped_lock lock(mutex);
             if(r) read_delegate = r;
             if(w) write_delegate = w;
         }
-        template<typename T> const T get(bool cached) {
+        template<typename T> const Stamped<T> get(bool cached) {
             boost::mutex::scoped_lock lock(mutex);
             
             if(!entry->readable){
@@ -300,7 +317,7 @@ protected:
                 allocate<T>();
                 read_delegate(*entry, buffer);
             }
-            return access<T>();
+            return Stamped<T>(access<T>(), buffer.stamp_);
         }
         template<typename T>  void set(const T &val) {
             boost::mutex::scoped_lock lock(mutex);
@@ -310,7 +327,7 @@ protected:
                     BOOST_THROW_EXCEPTION( AccessException(key) );
                 }
             }else{
-                allocate<T>() = val;
+                update<T>(val);
                 write_delegate(*entry, buffer);
             }
         }
@@ -320,7 +337,7 @@ protected:
                 if(!entry->writable){
                         BOOST_THROW_EXCEPTION( AccessException(key) );
                 }else{
-                    allocate<T>() = val;
+                    update<T>(val);
                     write_delegate(*entry, buffer);
                 }
             }
@@ -338,35 +355,32 @@ public:
     
     template<typename T> class Entry{
         boost::shared_ptr<Data> data;
+        const T get(bool cached) {
+            if(!data) BOOST_THROW_EXCEPTION( PointerInvalid() );
+            return data->get<T>(cached);
+        }
+        template<typename V> bool get(V & val, bool cached){
+            if(!data) return false;
+
+            try{
+                val = data->get<T>(cached);
+                return true;
+            }catch(...){
+                return false;
+            }
+        }
     public:
         typedef T type;
         bool valid() const { return data != 0; }
-        const T get() {
-            if(!data) BOOST_THROW_EXCEPTION( PointerInvalid() );
 
-            return data->get<T>(false);
-        }    
-        bool get(T & val){
-            try{
-                val = get();
-                return true;
-            }catch(...){
-                return false;
-            }
-        }    
-        const T get_cached() {
-            if(!data) BOOST_THROW_EXCEPTION( PointerInvalid() );
+        const T get() { return get(false); }
+        bool get(T & val){ return get(val, false); }
+        bool get(Stamped<T> & val){  return get(val, false); }
 
-            return data->get<T>(true);
-        }        
-        bool get_cached(T & val){
-            try{
-                val = get_cached();
-                return true;
-            }catch(...){
-                return false;
-            }
-        }    
+        const T get_cached() { return get(true); }
+        bool get_cached(T & val){ return get(val, true); }
+        bool get_cached(Stamped<T> & val){  return get(val, true); }
+
         void set(const T &val) {
             if(!data) BOOST_THROW_EXCEPTION( PointerInvalid() );
             data->set(val);

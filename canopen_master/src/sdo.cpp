@@ -296,6 +296,8 @@ void SDOClient::abort(uint32_t reason){
 }
 
 void SDOClient::handleFrame(const can::Frame & msg){
+    time_point now = get_abs_time();
+
     boost::mutex::scoped_lock cond_lock(cond_mutex);
     assert(msg.dlc == 8);
     
@@ -307,7 +309,7 @@ void SDOClient::handleFrame(const can::Frame & msg){
             DownloadInitiateResponse resp(msg);
             if( resp.test(last_msg, reason) ){
                 if(offset < total){
-                    interface_->send(last_msg = DownloadSegmentRequest(client_id, false, buffer, offset));
+                    interface_->send(last_msg = DownloadSegmentRequest(client_id, false, write_buffer, offset));
                 }else{
                     notify = true;
                 }
@@ -319,7 +321,7 @@ void SDOClient::handleFrame(const can::Frame & msg){
             DownloadSegmentResponse resp(msg);
             if( resp.test(last_msg, reason) ){
                 if(offset < total){
-                    interface_->send(last_msg = DownloadSegmentRequest(client_id, !resp.data.toggle, buffer, offset));
+                    interface_->send(last_msg = DownloadSegmentRequest(client_id, !resp.data.toggle, write_buffer, offset));
                 }else{
                     notify = true;
                 }
@@ -331,7 +333,8 @@ void SDOClient::handleFrame(const can::Frame & msg){
         {
             UploadInitiateResponse resp(msg);
             if( resp.test(last_msg, total, reason) ){
-                if(resp.read_data(buffer, offset, total)){
+                if(offset == 0) read_buffer.stamp_ = now;
+                if(resp.read_data(read_buffer.data_, offset, total)){
                     notify = true;
                 }else{
                     interface_->send(last_msg = UploadSegmentRequest(client_id, false));
@@ -343,7 +346,8 @@ void SDOClient::handleFrame(const can::Frame & msg){
         {
             UploadSegmentResponse resp(msg);
             if( resp.test(last_msg, reason) ){
-                if(resp.read_data(buffer, offset, total)){
+                if(offset == 0) read_buffer.stamp_ = now;
+                if(resp.read_data(read_buffer.data_, offset, total)){
                     if(resp.data.done || offset == total){
                     notify = true;
                     }else{
@@ -351,7 +355,7 @@ void SDOClient::handleFrame(const can::Frame & msg){
                     }
                 }else{
                     // abort, size mismatch
-                    LOG("abort, size mismatch" << buffer.size() << " " << resp.data.data_size());
+                    LOG("abort, size mismatch" << read_buffer.data_.size() << " " << resp.data.data_size());
                     reason = 0x06070010; // Data type does not match, length of service parameter does not match
                 }
             }
@@ -416,32 +420,33 @@ void SDOClient::wait_for_response(){
         BOOST_THROW_EXCEPTION( TimeoutException() ); // TODO
     }
 }
-void SDOClient::read(const canopen::ObjectDict::Entry &entry, String &data){
+void SDOClient::read(const canopen::ObjectDict::Entry &entry, Stamped<String> &data){
+    data.stamp_ = boost::chrono::high_resolution_clock::time_point();
     boost::timed_mutex::scoped_lock lock(mutex, boost::chrono::seconds(2));
     if(lock){
 
-        buffer = data;
+        read_buffer = data;
         offset = 0;
-        total = buffer.size();
+        total = read_buffer.data_.size();
         current_entry = &entry;
 
         interface_->send(last_msg = UploadInitiateRequest(client_id, entry));
 
         wait_for_response();
-        data = buffer;
+        data = read_buffer;
     }else{
         BOOST_THROW_EXCEPTION( TimeoutException() );
     }
 }
-void SDOClient::write(const canopen::ObjectDict::Entry &entry, const String &data){
+void SDOClient::write(const canopen::ObjectDict::Entry &entry, const Stamped<String> &data){
     boost::timed_mutex::scoped_lock lock(mutex, boost::chrono::seconds(2));
     if(lock){
-        buffer = data;
+        write_buffer = data.data_;
         offset = 0;
-        total = buffer.size();
+        total = write_buffer.size();
         current_entry = &entry;
 
-        interface_->send(last_msg = DownloadInitiateRequest(client_id, entry, buffer, offset));
+        interface_->send(last_msg = DownloadInitiateRequest(client_id, entry, write_buffer, offset));
 
         wait_for_response();
     }else{
