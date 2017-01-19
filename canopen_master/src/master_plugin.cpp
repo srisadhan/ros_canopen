@@ -45,7 +45,7 @@ class SimpleSyncLayer: public ManagingSyncLayer {
     time_point read_time_, write_time_;
 protected:
     virtual void handleRead(LayerStatus &status, const LayerState &current_state) {
-        if(current_state > Init){
+        if(current_state > Off){
             boost::this_thread::sleep_until(read_time_);
             write_time_ += step_;
         }
@@ -75,7 +75,7 @@ class ExternalSyncLayer: public ManagingSyncLayer {
 protected:
     virtual void handleRead(LayerStatus &status, const LayerState &current_state) {
         can::Frame msg;
-        if(current_state > Init){
+        if(current_state > Off){
             if(reader_.readUntil(&msg, get_abs_time(step_))){ // wait for sync
                 boost::this_thread::sleep_until(get_abs_time(half_step_)); // shift readout to middle of period
             }
