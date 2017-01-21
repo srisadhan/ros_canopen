@@ -8,6 +8,6 @@ env:
     - USE_DEB=true  ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
     - USE_DEB=true  ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
 install:
-  - git clone https://github.com/ros-industrial/industrial_ci.git random_name  
+  - git clone https://github.com/ros-industrial/industrial_ci.git .random_name  
 script: 
-  - random_name/travis.sh
+  - .random_name/travis.sh
