@@ -6,6 +6,6 @@ env:
     - USE_DEB=true  ROS_DISTRO="jade" PRERELEASE=true PRERELEASE_REPONAME=ros_canopen ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
     - USE_DEB=true  ROS_DISTRO="kinetic" PRERELEASE=true PRERELEASE_REPONAME=ros_canopen ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
 install:
-  - git clone https://github.com/ipa-mdl/industrial_ci.git -b feature/modules .random_name  
+  - git clone https://github.com/ipa-mdl/industrial_ci.git -b feature/pre-modules .random_name  
 script: 
   - .random_name/travis.sh
