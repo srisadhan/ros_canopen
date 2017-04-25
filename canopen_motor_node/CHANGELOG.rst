@@ -2,8 +2,11 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.2 (2017-03-28)
+------------------
+
+0.7.1 (2017-03-20)
+------------------
 * Decouble RobotLayer by introducing HandleLayerBase
 * Split layers into different headers and compile units
 * do not call handleReadread in HandleLayer::handleRecover
