@@ -6,6 +6,7 @@ env:
   matrix:
     - ROS_DISTRO="jade" PRERELEASE=true
     - ROS_DISTRO="kinetic" PRERELEASE=true
+    - ROS_DISTRO="lunar" PRERELEASE=true UBUNTU_OS_CODE_NAME=zesty
 install:
   - git clone --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config  
 script:
