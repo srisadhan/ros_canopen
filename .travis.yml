@@ -1,11 +1,17 @@
 sudo: required 
 dist: trusty 
-language: generic 
+language: generic
+
+cache:
+  directories:
+    - $HOME/.ccache
+
 env:
   matrix:
     - ROS_DISTRO="jade"    ROS_REPO=ros
     - ROS_DISTRO="jade"    ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="kinetic" ROS_REPO=ros
+    - ROS_DISTRO="kinetic" ROS_REPO=ros CC=/usr/lib/ccache/gcc CXX=/usr/lib/ccache/g++ ADDITIONAL_DEBS=ccache DOCKER_RUN_OPTS='-v /home/travis/.ccache:/root/.ccache'
     - ROS_DISTRO="kinetic" ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="lunar"   ROS_REPO=ros-shadow-fixed
 install:
