@@ -11,10 +11,11 @@ env:
     - ROS_DISTRO="jade"    ROS_REPO=ros
     - ROS_DISTRO="jade"    ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="kinetic" ROS_REPO=ros
-    - ROS_DISTRO="kinetic" ROS_REPO=ros CC=/usr/lib/ccache/gcc CXX=/usr/lib/ccache/g++ ADDITIONAL_DEBS=ccache DOCKER_RUN_OPTS='-v /home/travis/.ccache:/root/.ccache'
+    - ROS_DISTRO="kinetic" ROS_REPO=ros CCACHE_DIR=$HOME/.ccache
     - ROS_DISTRO="kinetic" ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="lunar"   ROS_REPO=ros-shadow-fixed
+
 install:
-  - git clone --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config  
+  - git clone --depth=1 https://github.com/ipa-mdl/industrial_ci.git -b ccache .ci_config
 script: 
   - .ci_config/travis.sh
