@@ -7,7 +7,7 @@ env:
     - ROS_DISTRO="jade"    ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="kinetic" ROS_REPO=ros
     - ROS_DISTRO="kinetic" ROS_REPO=ros-shadow-fixed
-    - ROS_DISTRO="kinetic" ROS_REPO=ros BASE_COMMIT=${TRAVIS_COMMIT_RANGE%%.*} ABICHECK=${BASE_COMMIT:-jade-devel}
+    - ROS_DISTRO="kinetic" ROS_REPO=ros BASE_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH+$TRAVIS_BRANCH} ABICHECK=${BASE_BRANCH:-jade-devel}
     - ROS_DISTRO="lunar"   ROS_REPO=ros-shadow-fixed
 install:
   - git clone --depth=1 https://github.com/ipa-mdl/industrial_ci.git -b feature/abi-check .ci_config
