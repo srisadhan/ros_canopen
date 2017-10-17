@@ -5,12 +5,13 @@ find_package(catkin REQUIRED
   COMPONENTS
     canopen_402
     canopen_chain_node
+    canopen_master
     controller_manager
     controller_manager_msgs
     filters
     hardware_interface
     joint_limits_interface
-    joint_limits_interface
+    roscpp
     urdf
 )
 
@@ -30,9 +31,11 @@ catkin_package(
   CATKIN_DEPENDS
     canopen_402
     canopen_chain_node
+    canopen_master
     controller_manager
     hardware_interface
     joint_limits_interface
+    roscpp
     urdf
   DEPENDS
     Boost
@@ -61,21 +64,21 @@ add_dependencies(canopen_motor
 )
 
 # canopen_motor_node
-add_executable(canopen_motor_node
+add_executable(${PROJECT_NAME}
   src/canopen_motor_chain_node.cpp
 )
-target_link_libraries(canopen_motor_node
+target_link_libraries(${PROJECT_NAME}
   canopen_motor
   ${catkin_LIBRARIES}
 )
-add_dependencies(canopen_motor_node
+add_dependencies(${PROJECT_NAME}
   ${catkin_EXPORTED_TARGETS}
 )
 
 install(
   TARGETS
     canopen_motor
-    canopen_motor_node
+    ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
