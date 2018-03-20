@@ -16,7 +16,7 @@ struct NMTcommand{
     };
     uint8_t command;
     uint8_t node_id;
-    
+
     struct Frame: public FrameOverlay<NMTcommand>{
         Frame(uint8_t node_id, const Command &c) : FrameOverlay(can::Header()) {
             data.command = c;
@@ -27,7 +27,7 @@ struct NMTcommand{
 
 #pragma pack(pop) /* pop previous alignment from stack */
 
-Node::Node(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectDict> dict, uint8_t node_id, const boost::shared_ptr<SyncCounter> sync)
+Node::Node(const boost::shared_ptr<can::CommInterface> interface, const ObjectDict::ObjectDictSharedPtr dict, uint8_t node_id, const boost::shared_ptr<SyncCounter> sync)
 : Layer("Node 301"), node_id_(node_id), interface_(interface), sync_(sync) , state_(Unknown), sdo_(interface, dict, node_id), pdo_(interface){
     try{
         getStorage()->entry(heartbeat_, 0x1017);
@@ -35,7 +35,7 @@ Node::Node(const boost::shared_ptr<can::CommInterface> interface, const boost::s
     catch(const std::out_of_range){
     }
 }
-    
+
 const Node::State Node::getState(){
     boost::timed_mutex::scoped_lock lock(mutex); // TODO: timed lock?
     return state_;
@@ -55,7 +55,7 @@ bool Node::reset_com(){
 bool Node::reset(){
     boost::timed_mutex::scoped_lock lock(mutex); // TODO: timed lock?
     getStorage()->reset();
-    
+
     interface_->send(NMTcommand::Frame(node_id_, NMTcommand::Reset));
     if(wait_for(BootUp, boost::chrono::seconds(10)) != 1){
         return false;

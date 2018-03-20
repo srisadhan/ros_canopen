@@ -78,7 +78,7 @@ public:
     bool add(uint8_t level, const std::string &key, bool forced){
         try{
             ObjectDict::Key k(key);
-            const boost::shared_ptr<const ObjectDict::Entry> entry = node_->getStorage()->dict_->get(k);
+            const ObjectDict::EntrySharedConstPtr entry = node_->getStorage()->dict_->get(k);
             std::string name = entry->desc.empty() ? key : entry->desc;
             entries_.push_back(boost::bind(log_entry, _1, level, name, node_->getStorage()->getStringReader(k, !forced)));
             return true;
@@ -226,4 +226,3 @@ public:
 } //namespace canopen
 
 #endif
-

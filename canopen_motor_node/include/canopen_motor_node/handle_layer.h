@@ -28,7 +28,7 @@ public:
 
 
 class ObjectVariables {
-    const boost::shared_ptr<ObjectStorage> storage_;
+    const ObjectStorageSharedPtr storage_;
     struct Getter {
         boost::shared_ptr<double> val_ptr;
         boost::function<bool(double&)> func;
@@ -49,7 +49,7 @@ public:
         typedef typename ObjectStorage::DataType<dt>::type type;
         return list.getters_.insert(std::make_pair(key, Getter(list.storage_->entry<type>(key)))).first->second;
     }
-    ObjectVariables(const boost::shared_ptr<ObjectStorage> storage) : storage_(storage) {}
+    ObjectVariables(const ObjectStorageSharedPtr storage) : storage_(storage) {}
     bool sync(){
         boost::mutex::scoped_lock lock(mutex_);
         bool ok = true;

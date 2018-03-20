@@ -183,7 +183,7 @@ public:
 template<uint16_t ID, typename TYPE, uint16_t OBJ, uint8_t SUB, uint16_t CW_MASK> class ModeForwardHelper : public ModeTargetHelper<TYPE> {
     canopen::ObjectStorage::Entry<TYPE> target_entry_;
 public:
-    ModeForwardHelper(boost::shared_ptr<ObjectStorage> storage) : ModeTargetHelper<TYPE>(ID) {
+    ModeForwardHelper(ObjectStorageSharedPtr storage) : ModeTargetHelper<TYPE>(ID) {
         if(SUB) storage->entry(target_entry_, OBJ, SUB);
         else storage->entry(target_entry_, OBJ);
     }
@@ -223,7 +223,7 @@ public:
         CW_Immediate =  Command402::CW_Operation_mode_specific1,
         CW_Blending =  Command402::CW_Operation_mode_specific3,
     };
-    ProfiledPositionMode(boost::shared_ptr<ObjectStorage> storage) : ModeTargetHelper(MotorBase::Profiled_Position) {
+    ProfiledPositionMode(ObjectStorageSharedPtr storage) : ModeTargetHelper(MotorBase::Profiled_Position) {
         storage->entry(target_position_, 0x607A);
     }
     virtual bool start() { sw_ = 0; last_target_= std::numeric_limits<double>::quiet_NaN(); return ModeTargetHelper::start(); }
@@ -278,7 +278,7 @@ class DefaultHomingMode: public HomingMode{
     };
     bool error(canopen::LayerStatus &status, const std::string& msg) { execute_= false; status.error(msg); return false; }
 public:
-    DefaultHomingMode(boost::shared_ptr<ObjectStorage> storage) {
+    DefaultHomingMode(ObjectStorageSharedPtr storage) {
         storage->entry(homing_method_, 0x6098);
     }
     virtual bool start();
@@ -292,7 +292,7 @@ class Motor402 : public MotorBase
 {
 public:
 
-    Motor402(const std::string &name, boost::shared_ptr<ObjectStorage> storage, const canopen::Settings &settings)
+    Motor402(const std::string &name, ObjectStorageSharedPtr storage, const canopen::Settings &settings)
     : MotorBase(name), status_word_(0),control_word_(0),
       switching_state_(State402::InternalState(settings.get_optional<unsigned int>("switching_state", static_cast<unsigned int>(State402::Operation_Enable)))),
       monitor_mode_(settings.get_optional<bool>("monitor_mode", true))
@@ -323,7 +323,7 @@ public:
         return mode_allocators_.insert(std::make_pair(mode, boost::bind(&Motor402::createAndRegister<T,T1,T2>, this, mode, t1, t2))).second;
     }
 
-    virtual void registerDefaultModes(boost::shared_ptr<ObjectStorage> storage){
+    virtual void registerDefaultModes(ObjectStorageSharedPtr storage){
         registerMode<ProfiledPositionMode> (MotorBase::Profiled_Position, storage);
         registerMode<VelocityMode> (MotorBase::Velocity, storage);
         registerMode<ProfiledVelocityMode> (MotorBase::Profiled_Velocity, storage);
@@ -337,7 +337,7 @@ public:
 
     class Allocator : public MotorBase::Allocator{
     public:
-        virtual boost::shared_ptr<MotorBase> allocate(const std::string &name, boost::shared_ptr<ObjectStorage> storage, const canopen::Settings &settings);
+        virtual boost::shared_ptr<MotorBase> allocate(const std::string &name, ObjectStorageSharedPtr storage, const canopen::Settings &settings);
     };
 protected:
     virtual void handleRead(LayerStatus &status, const LayerState &current_state);

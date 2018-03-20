@@ -83,7 +83,7 @@ bool check_map_changed(const uint8_t &num, const ObjectDict &dict, const uint16_
     }
     return map_changed;
 }
-void PDOMapper::PDO::parse_and_set_mapping(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index, const bool &read, const bool &write){
+void PDOMapper::PDO::parse_and_set_mapping(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index, const bool &read, const bool &write){
                             
     const canopen::ObjectDict & dict = *storage->dict_;
     
@@ -166,7 +166,7 @@ PDOMapper::PDOMapper(const boost::shared_ptr<can::CommInterface> interface)
 :interface_(interface)
 {
 }
-bool PDOMapper::init(const boost::shared_ptr<ObjectStorage> storage, LayerStatus &status){
+bool PDOMapper::init(const ObjectStorageSharedPtr storage, LayerStatus &status){
     boost::mutex::scoped_lock lock(mutex_);
 
     try{
@@ -203,7 +203,7 @@ bool PDOMapper::init(const boost::shared_ptr<ObjectStorage> storage, LayerStatus
 }
 
 
-bool PDOMapper::RPDO::init(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index){
+bool PDOMapper::RPDO::init(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
     boost::mutex::scoped_lock lock(mutex);
     listener_.reset();
     const canopen::ObjectDict & dict = *storage->dict_;
@@ -224,7 +224,7 @@ bool PDOMapper::RPDO::init(const boost::shared_ptr<ObjectStorage> &storage, cons
     return true;
 }
 
-bool PDOMapper::TPDO::init(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index){
+bool PDOMapper::TPDO::init(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
     boost::mutex::scoped_lock lock(mutex);
     const canopen::ObjectDict & dict = *storage->dict_;
 

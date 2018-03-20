@@ -20,7 +20,6 @@ typedef boost::chrono::high_resolution_clock::duration time_duration;
 inline time_point get_abs_time(const time_duration& timeout) { return boost::chrono::high_resolution_clock::now() + timeout; }
 inline time_point get_abs_time() { return boost::chrono::high_resolution_clock::now(); }
 
-
 template<typename T> struct FrameOverlay: public can::Frame{
     T &data;
     FrameOverlay(const Header &h) : can::Frame(h,sizeof(T)), data(*(T*) can::Frame::data.c_array()) {
@@ -53,11 +52,11 @@ protected:
     void read(const canopen::ObjectDict::Entry &entry, String &data);
     void write(const canopen::ObjectDict::Entry &entry, const String &data);
 public:
-    const boost::shared_ptr<ObjectStorage> storage_;
+    const ObjectStorageSharedPtr storage_;
 
     void init();
 
-    SDOClient(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectDict> dict, uint8_t node_id)
+    SDOClient(const boost::shared_ptr<can::CommInterface> interface, const ObjectDict::ObjectDictSharedPtr dict, uint8_t node_id)
     : interface_(interface), storage_(boost::make_shared<ObjectStorage>(dict, node_id, ObjectStorage::ReadDelegate(this, &SDOClient::read), ObjectStorage::WriteDelegate(this, &SDOClient::write))), reader_(false, 1)
     {
     }
@@ -85,7 +84,7 @@ class PDOMapper{
 
     class PDO {
     protected:
-        void parse_and_set_mapping(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index, const bool &read, const bool &write);
+        void parse_and_set_mapping(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index, const bool &read, const bool &write);
         can::Frame frame;
         uint8_t transmission_type;
         std::vector< boost::shared_ptr<Buffer> >buffers;
@@ -93,7 +92,7 @@ class PDOMapper{
 
     struct TPDO: public PDO{
         void sync();
-        static boost::shared_ptr<TPDO> create(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index){
+        static boost::shared_ptr<TPDO> create(const boost::shared_ptr<can::CommInterface> interface, const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
             boost::shared_ptr<TPDO> tpdo(new TPDO(interface));
             if(!tpdo->init(storage, com_index, map_index))
                 tpdo.reset();
@@ -101,21 +100,21 @@ class PDOMapper{
         }
     private:
         TPDO(const boost::shared_ptr<can::CommInterface> interface) : interface_(interface){}
-        bool init(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index);
+        bool init(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index);
         const boost::shared_ptr<can::CommInterface> interface_;
         boost::mutex mutex;
     };
 
     struct RPDO : public PDO{
         void sync(LayerStatus &status);
-        static boost::shared_ptr<RPDO> create(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index){
+        static boost::shared_ptr<RPDO> create(const boost::shared_ptr<can::CommInterface> interface, const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
             boost::shared_ptr<RPDO> rpdo(new RPDO(interface));
             if(!rpdo->init(storage, com_index, map_index))
                 rpdo.reset();
             return rpdo;
         }
     private:
-        bool init(const boost::shared_ptr<ObjectStorage> &storage, const uint16_t &com_index, const uint16_t &map_index);
+        bool init(const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index);
         RPDO(const boost::shared_ptr<can::CommInterface> interface) : interface_(interface), timeout(-1) {}
         boost::mutex mutex;
         const boost::shared_ptr<can::CommInterface> interface_;
@@ -134,7 +133,7 @@ public:
     PDOMapper(const boost::shared_ptr<can::CommInterface> interface);
     void read(LayerStatus &status);
     bool write();
-    bool init(const boost::shared_ptr<ObjectStorage> storage, LayerStatus &status);
+    bool init(const ObjectStorageSharedPtr storage, LayerStatus &status);
 };
 
 class EMCYHandler : public Layer {
@@ -143,7 +142,7 @@ class EMCYHandler : public Layer {
     ObjectStorage::Entry<uint8_t> num_errors_;
     can::CommInterface::FrameListener::Ptr emcy_listener_;
     void handleEMCY(const can::Frame & msg);
-    const boost::shared_ptr<ObjectStorage> storage_;
+    const ObjectStorageSharedPtr storage_;
 
     virtual void handleDiag(LayerReport &report);
 
@@ -155,7 +154,7 @@ class EMCYHandler : public Layer {
     virtual void handleShutdown(LayerStatus &status);
 
 public:
-    EMCYHandler(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectStorage> storage);
+    EMCYHandler(const boost::shared_ptr<can::CommInterface> interface, const ObjectStorageSharedPtr storage);
     void resetErrors(LayerStatus &status);
 };
 
@@ -183,12 +182,12 @@ public:
         Unknown = 255, BootUp = 0, Stopped = 4, Operational = 5 , PreOperational = 127
     };
     const uint8_t node_id_;
-    Node(const boost::shared_ptr<can::CommInterface> interface, const boost::shared_ptr<ObjectDict> dict, uint8_t node_id, const boost::shared_ptr<SyncCounter> sync = boost::shared_ptr<SyncCounter>());
+    Node(const boost::shared_ptr<can::CommInterface> interface, const ObjectDict::ObjectDictSharedPtr dict, uint8_t node_id, const boost::shared_ptr<SyncCounter> sync = boost::shared_ptr<SyncCounter>());
 
     const State getState();
     void enterState(const State &s);
 
-    const boost::shared_ptr<ObjectStorage> getStorage() { return sdo_.storage_; }
+    const ObjectStorageSharedPtr getStorage() { return sdo_.storage_; }
 
     bool start();
     bool stop();

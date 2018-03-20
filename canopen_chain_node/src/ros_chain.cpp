@@ -17,7 +17,7 @@
 namespace canopen {
 
 PublishFunc::func_type PublishFunc::create(ros::NodeHandle &nh,  const std::string &name, boost::shared_ptr<canopen::Node> node, const std::string &key, bool force){
-    boost::shared_ptr<ObjectStorage> s = node->getStorage();
+    ObjectStorageSharedPtr s = node->getStorage();
 
     switch(ObjectDict::DataTypes(s->dict_->get(key)->data_type)){
         case ObjectDict::DEFTYPE_INTEGER8:       return create< std_msgs::Int8    >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER8>::type>(key), force);
@@ -459,7 +459,7 @@ bool RosChain::setup_nodes(){
         catch(...){
         }
 
-        boost::shared_ptr<ObjectDict>  dict = ObjectDict::fromFile(eds, overlay);
+        ObjectDict::ObjectDictSharedPtr  dict = ObjectDict::fromFile(eds, overlay);
         if(!dict){
             ROS_ERROR_STREAM("EDS '" << eds << "' could not be parsed");
             return false;
