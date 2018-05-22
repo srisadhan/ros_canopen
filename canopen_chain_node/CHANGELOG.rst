@@ -2,6 +2,14 @@
 Changelog for package canopen_chain_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.8 (2017-07-18)
+------------------
+* added reset_errors_before_recover option
+* Contributors: Mathias Lüdtke
+
+0.6.7 (2017-03-28)
+------------------
+
 0.6.6 (2017-03-18)
 ------------------
 * refactored EMCY handling into separate layer

@@ -2,6 +2,14 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.8 (2017-07-18)
+------------------
+* fix rosdep dependency on kernel headers
+* Contributors: Mathias Lüdtke
+
+0.6.7 (2017-03-28)
+------------------
+
 0.6.6 (2017-03-18)
 ------------------
 * stop CAN driver on read errors as well

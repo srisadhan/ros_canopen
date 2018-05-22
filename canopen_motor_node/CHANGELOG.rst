@@ -2,6 +2,12 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.8 (2017-07-18)
+------------------
+
+0.6.7 (2017-03-28)
+------------------
+
 0.6.6 (2017-03-18)
 ------------------
 * do not call handleReadread in HandleLayer::handleRecover
