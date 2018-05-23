@@ -154,6 +154,7 @@ TEST(TopicToSocketCANTest, checkInvalidFrameHandling)
   publisher_.publish(msg);
   ros::WallDuration(1.0).sleep();
   ros::spinOnce();
+  ros::WallDuration(1.0).sleep();
   EXPECT_EQ(frame_collector_.frames.size(), 1);
 
   // wipe the frame queue.
