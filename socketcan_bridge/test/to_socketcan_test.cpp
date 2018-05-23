@@ -53,7 +53,7 @@ TEST(TopicToSocketCANTest, checkCorrectData)
   ros::NodeHandle nh(""), nh_param("~");
 
   // create the dummy interface
-  can::DummyInterfaceSharedPtr driver_ = std::make_shared<can::DummyInterface>(true);
+  can::DummyInterfaceSharedPtr driver_ = boost::make_shared<can::DummyInterface>(true);
 
   // start the to topic bridge.
   socketcan_bridge::TopicToSocketCAN to_socketcan_bridge(&nh, &nh_param, driver_);
@@ -117,7 +117,7 @@ TEST(TopicToSocketCANTest, checkInvalidFrameHandling)
   ros::NodeHandle nh(""), nh_param("~");
 
   // create the dummy interface
-  can::DummyInterfaceSharedPtr driver_ = std::make_shared<can::DummyInterface>(true);
+  can::DummyInterfaceSharedPtr driver_ = boost::make_shared<can::DummyInterface>(true);
 
   // start the to topic bridge.
   socketcan_bridge::TopicToSocketCAN to_socketcan_bridge(&nh, &nh_param, driver_);
@@ -154,7 +154,6 @@ TEST(TopicToSocketCANTest, checkInvalidFrameHandling)
   publisher_.publish(msg);
   ros::WallDuration(1.0).sleep();
   ros::spinOnce();
-  ros::WallDuration(1.0).sleep();
   EXPECT_EQ(frame_collector_.frames.size(), 1);
 
   // wipe the frame queue.

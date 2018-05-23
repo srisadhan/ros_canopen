@@ -6,13 +6,13 @@
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#include <functional>
+#include <boost/bind.hpp>
 
 namespace can{
 
 
 template<typename Socket> class AsioDriver : public DriverInterface{
-    typedef FilteredDispatcher<unsigned int, CommInterface::FrameListener> FrameDispatcher;
+    typedef FilteredDispatcher<const unsigned int, CommInterface::FrameListener> FrameDispatcher;
     typedef SimpleDispatcher<StateInterface::StateListener> StateDispatcher;
     FrameDispatcher frame_dispatcher_;
     StateDispatcher state_dispatcher_;
@@ -92,7 +92,7 @@ public:
             boost::asio::io_service::work work(io_service_);
             setDriverState(State::ready);
 
-            boost::thread post_thread([this]() { io_service_.run(); });
+            boost::thread post_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 
             triggerReadSome();
 

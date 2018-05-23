@@ -1,10 +1,9 @@
 #ifndef H_CAN_INTERFACE
 #define H_CAN_INTERFACE
 
-#include <array>
-#include <memory>
-
+#include <boost/array.hpp>
 #include <boost/system/error_code.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "FastDelegate.h"
 
@@ -56,7 +55,7 @@ struct ErrorHeader : public Header{
 /** representation of a CAN frame */
 struct Frame: public Header{
     typedef unsigned char value_type;
-    std::array<value_type, 8> data; ///< array for 8 data bytes with bounds checking
+    boost::array<value_type, 8> data; ///< array for 8 data bytes with bounds checking
     unsigned char dlc; ///< len of data
 
     /** check if frame header and length are valid*/
@@ -73,7 +72,7 @@ struct Frame: public Header{
     Frame() : Header(), dlc(0) {}
     Frame(const Header &h, unsigned char l = 0) : Header(h), dlc(l) {}
 
-    value_type * c_array() { return data.data(); }
+    value_type * c_array() { return data.c_array(); }
     const value_type * c_array() const { return data.data(); }
 };
 
@@ -97,7 +96,8 @@ template <typename T,typename U> class Listener{
 public:
     typedef U Type;
     typedef T Callable;
-    typedef std::shared_ptr<const Listener> ListenerConstSharedPtr;
+    typedef boost::shared_ptr<const Listener> ListenerConstSharedPtr;
+    typedef ListenerConstSharedPtr Ptr __attribute__((deprecated));
 
     Listener(const T &callable):callable_(callable){ }
     void operator()(const U & u) const { if(callable_) callable_(u); }
@@ -120,7 +120,7 @@ public:
 
     virtual ~StateInterface() {}
 };
-typedef std::shared_ptr<StateInterface> StateInterfaceSharedPtr;
+typedef boost::shared_ptr<StateInterface> StateInterfaceSharedPtr;
 typedef StateInterface::StateListenerConstSharedPtr StateListenerConstSharedPtr;
 
 class CommInterface{
@@ -156,7 +156,7 @@ public:
 
     virtual ~CommInterface() {}
 };
-typedef std::shared_ptr<CommInterface> CommInterfaceSharedPtr;
+typedef boost::shared_ptr<CommInterface> CommInterfaceSharedPtr;
 typedef CommInterface::FrameListenerConstSharedPtr FrameListenerConstSharedPtr;
 
 
@@ -198,7 +198,7 @@ public:
 
     virtual ~DriverInterface() {}
 };
-typedef std::shared_ptr<DriverInterface> DriverInterfaceSharedPtr;
+typedef boost::shared_ptr<DriverInterface> DriverInterfaceSharedPtr;
 
 
 } // namespace can

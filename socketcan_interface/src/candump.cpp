@@ -1,8 +1,7 @@
 #include <iostream>
-#include <memory>
-#include <unordered_set>
-
+#include <boost/unordered_set.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/make_shared.hpp>
 #include <class_loader/class_loader.hpp>
 #include <socketcan_interface/socketcan.h>
 
@@ -38,7 +37,7 @@ void print_frame(const Frame &f){
 }
 
 
-std::shared_ptr<class_loader::ClassLoader> g_loader;
+boost::shared_ptr<class_loader::ClassLoader> g_loader;
 DriverInterfaceSharedPtr g_driver;
 
 void print_error(const State & s){
@@ -58,8 +57,8 @@ int main(int argc, char *argv[]){
     if(argc == 4 ){
         try
         {
-            g_loader = std::make_shared<class_loader::ClassLoader>(argv[2]);
-            g_driver = g_loader->createUniqueInstance<DriverInterface>(argv[3]);
+            g_loader = boost::make_shared<class_loader::ClassLoader>(argv[2]);
+            g_driver = g_loader->createInstance<DriverInterface>(argv[3]);
         }
 
         catch(std::exception& ex)
@@ -68,7 +67,7 @@ int main(int argc, char *argv[]){
             return 1;
         }
     }else{
-        g_driver = std::make_shared<SocketCANInterface>();
+        g_driver = boost::make_shared<SocketCANInterface>();
     }
 
 

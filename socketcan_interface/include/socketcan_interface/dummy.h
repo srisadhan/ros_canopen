@@ -1,8 +1,6 @@
 #ifndef SOCKETCAN_INTERFACE_DUMMY_H
 #define SOCKETCAN_INTERFACE_DUMMY_H
 
-#include <unordered_map>
-
 #include "interface.h"
 #include "dispatcher.h"
 #include "string.h"
@@ -11,9 +9,9 @@
 namespace can{
 
 class DummyInterface : public DriverInterface{
-    typedef FilteredDispatcher<unsigned int, CommInterface::FrameListener> FrameDispatcher;
+    typedef FilteredDispatcher<const unsigned int, CommInterface::FrameListener> FrameDispatcher;
     typedef SimpleDispatcher<StateInterface::StateListener> StateDispatcher;
-    typedef std::unordered_multimap<std::string, Frame> Map;
+    typedef boost::unordered_multimap<std::string, Frame> Map;
     FrameDispatcher frame_dispatcher_;
     StateDispatcher state_dispatcher_;
     State state_;
@@ -94,7 +92,7 @@ public:
     };
 
 };
-typedef std::shared_ptr<DummyInterface> DummyInterfaceSharedPtr;
+typedef boost::shared_ptr<DummyInterface> DummyInterfaceSharedPtr;
 
 
 }
