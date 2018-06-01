@@ -180,7 +180,7 @@ protected:
         boost::system::error_code ec;
         boost::asio::write(socket_, boost::asio::buffer(&frame, sizeof(frame)),boost::asio::transfer_all(), ec);
         if(ec){
-            LOG("FAILED " << ec);
+            ROSCANOPEN_ERROR("FAILED " << ec);
             setErrorCode(ec);
             setNotReady();
             return false;
@@ -200,7 +200,7 @@ protected:
                 input_.id = frame_.can_id & CAN_EFF_MASK;
                 input_.is_error = 1;
 
-                LOG("error: " << input_.id);
+                ROSCANOPEN_ERROR("error: " << input_.id);
                 setInternalError(input_.id);
                 setNotReady();
 
