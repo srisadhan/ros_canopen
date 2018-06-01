@@ -7,6 +7,7 @@ find_package(catkin REQUIRED
     diagnostic_updater
     message_generation
     pluginlib
+    rosconsole_bridge
     roscpp
     roslib
     socketcan_interface
@@ -36,6 +37,7 @@ catkin_package(
     diagnostic_updater
     message_runtime
     pluginlib
+    rosconsole_bridge
     roscpp
     socketcan_interface
     std_srvs
@@ -52,6 +54,7 @@ include_directories(
 # canopen_ros_chain
 add_library(canopen_ros_chain
   src/ros_chain.cpp
+  src/rosconsole_bridge.cpp
 )
 target_link_libraries(canopen_ros_chain
   ${Boost_LIBRARIES}
@@ -74,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # canopen_sync_node
 add_executable(canopen_sync_node
+  src/rosconsole_bridge.cpp
   src/sync_node.cpp
 )
 target_link_libraries(canopen_sync_node
